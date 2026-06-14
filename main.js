@@ -29,9 +29,13 @@ async function getMovieDetail(apiKey, imdbID) {
 }
 
 async function savingMovieList(imdbArr) {
-  imdbArr.forEach(async (imdb) => {
+  let imdbData = await imdbArr;
+  imdbData.forEach(async (imdb) => {
+    if(movieListDetails.length === 5){
+      movieListDetails = []
+    }
     movieListDetails.push(await getMovieDetail(API_KEY, imdb));
-    renderMovieList(movieListDetails);
+    renderMovieList(movieListDetails)
   });
 }
 
@@ -62,21 +66,27 @@ function renderMovieList(movieDataArr) {
   document.querySelectorAll(".add-watchlist").forEach((element) => {
     element.addEventListener("click", (event) => {
       let data = event.target.dataset.imdbserial;
-      console.log(data);
+      saveToWatchlist(data, movieListDetails);
     });
   });
 }
 
-function saveToWatchlist(imdbID) {
+function saveToWatchlist(imdbID, movieData) {
   //later add save to localstorage
+  const savedMovie = movieData.find((data) => {
+    return data.imdbID === imdbID;
+  });
+  watchlist.push(savedMovie);
+  console.log(watchlist);
 }
 
 searchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const userSearch = document.getElementById("movie-title").value;
-  const imdbArray = await getMovieListImdb(API_KEY, userSearch);
+  const imdbArray = await getMovieListImdb(API_KEY, userSearch); //1 array[123,123]
   if (imdbArray.length > 0) {
-    const saveMovieData = await savingMovieList(imdbArray);
+    savingMovieList(imdbArray); // 2
   } else {
     document.getElementById("empty-placeholder").innerHTML = imdbArray;
   }
