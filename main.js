@@ -1,7 +1,7 @@
 import { dummyMovies, movieDetails } from "./data.js";
 
 const BASE_URL = "http://www.omdbapi.com/?apikey";
-const API_KEY = "b7d95da9";
+const API_KEY = "getyourownapi";
 
 const movieListEl = document.getElementById("movie-list");
 const searchForm = document.querySelector("form");
