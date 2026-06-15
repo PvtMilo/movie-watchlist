@@ -1,10 +1,11 @@
 import { dummyMovies, movieDetails } from "./data.js";
 
 const BASE_URL = "http://www.omdbapi.com/?apikey";
-const API_KEY = "getyourownapi";
+const API_KEY = "b7d95da9";
 
 const movieListEl = document.getElementById("movie-list");
 const searchForm = document.querySelector("form");
+const movieWatchlistEl = document.getElementById("movie-watchlist")
 
 let movieListDetails = [];
 let watchlist = [];
@@ -31,19 +32,18 @@ async function getMovieDetail(apiKey, imdbID) {
 async function savingMovieList(imdbArr) {
   let imdbData = await imdbArr;
   imdbData.forEach(async (imdb) => {
-    if(movieListDetails.length === 5){
-      movieListDetails = []
+    if (movieListDetails.length === 5) {
+      movieListDetails = [];
     }
     movieListDetails.push(await getMovieDetail(API_KEY, imdb));
-    renderMovieList(movieListDetails)
+    renderMovieList(movieListDetails);
   });
 }
 
 function renderMovieList(movieDataArr) {
   let movieDom = "";
-  movieDataArr.forEach(
-    (movie) =>
-      (movieDom += `<div>
+  movieDataArr.forEach((movie) => {
+    movieDom += `<div>
             <div>
                 <img src="${movie.Poster}">
             </div>
@@ -59,14 +59,15 @@ function renderMovieList(movieDataArr) {
                     <p>${movie.Plot}</p>
                 </div>
             </div>
-        </div>`),
-  );
+        </div>`;
+  });
   movieListEl.innerHTML = movieDom;
   document.getElementById("empty-placeholder").style.display = "none";
   document.querySelectorAll(".add-watchlist").forEach((element) => {
     element.addEventListener("click", (event) => {
       let data = event.target.dataset.imdbserial;
       saveToWatchlist(data, movieListDetails);
+      getLocalStorageData();
     });
   });
 }
@@ -77,19 +78,54 @@ function saveToWatchlist(imdbID, movieData) {
     return data.imdbID === imdbID;
   });
   watchlist.push(savedMovie);
-  console.log(watchlist);
+  localStorage.setItem("watchlist", JSON.stringify(watchlist));
 }
 
-searchForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+function getLocalStorageData() {
+  const arrayData = JSON.parse(localStorage.getItem("watchlist"));
+  renderWatchlist(arrayData);
+}
 
-  const userSearch = document.getElementById("movie-title").value;
-  const imdbArray = await getMovieListImdb(API_KEY, userSearch); //1 array[123,123]
-  if (imdbArray.length > 0) {
-    savingMovieList(imdbArray); // 2
-  } else {
-    document.getElementById("empty-placeholder").innerHTML = imdbArray;
-  }
+function renderWatchlist(arrData) {
+  let watchlistDom = "";
+  arrData.forEach((movie) => {
+    watchlistDom += `<div>
+            <div>
+                <img src="${movie.Poster}">
+            </div>
+            <div>
+                <h2>${movie.Title}</h2>
+                <div>
+                    <p>${movie.Runtime}</p>
+                    <p>${movie.Genre}</p>
+                    <div>
+                        <button class="add-watchlist" data-imdbserial=${movie.imdbID}>+</button>
+                        <p>${movie.imdbID}</p>
+                    </div>
+                    <p>${movie.Plot}</p>
+                </div>
+            </div>
+        </div>`;
+  });
+  movieWatchlistEl.innerHTML = watchlistDom
+}
 
-  document.getElementById("movie-title").value = "";
-});
+if (searchForm) {
+  searchForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const userSearch = document.getElementById("movie-title").value;
+    const imdbArray = await getMovieListImdb(API_KEY, userSearch); //1 array[123,123]
+    if (imdbArray.length > 0) {
+      savingMovieList(imdbArray); // 2
+    } else {
+      document.getElementById("empty-placeholder").innerHTML = imdbArray;
+    }
+
+    document.getElementById("movie-title").value = "";
+  });
+}
+
+if(movieWatchlistEl){
+  getLocalStorageData()
+}
