@@ -5,7 +5,7 @@ const API_KEY = "getyourownapi";
 
 const movieListEl = document.getElementById("movie-list");
 const searchForm = document.querySelector("form");
-const movieWatchlistEl = document.getElementById("movie-watchlist")
+const movieWatchlistEl = document.getElementById("movie-watchlist");
 
 let movieListDetails = [];
 let watchlist = [];
@@ -32,7 +32,7 @@ async function getMovieDetail(apiKey, imdbID) {
 async function savingMovieList(imdbArr) {
   let imdbData = await imdbArr;
   imdbData.forEach(async (imdb) => {
-    if (movieListDetails.length === 5) {
+    if (movieListDetails.length >= 5) {
       movieListDetails = [];
     }
     movieListDetails.push(await getMovieDetail(API_KEY, imdb));
@@ -67,7 +67,6 @@ function renderMovieList(movieDataArr) {
     element.addEventListener("click", (event) => {
       let data = event.target.dataset.imdbserial;
       saveToWatchlist(data, movieListDetails);
-      getLocalStorageData();
     });
   });
 }
@@ -81,9 +80,21 @@ function saveToWatchlist(imdbID, movieData) {
   localStorage.setItem("watchlist", JSON.stringify(watchlist));
 }
 
+function removeWatchlist(imdbId,arrData) {
+  console.log(imdbId);
+  // delete and update data
+  const data = getLocalStorageData()
+  const deleteTargetIndex = data.findIndex((movie)=> {
+    return movie.imdbID === imdbId
+  })
+  data.splice(deleteTargetIndex,deleteTargetIndex + 1)
+  localStorage.setItem("watchlist", JSON.stringify(data))
+  renderWatchlist(getLocalStorageData())
+}
+
 function getLocalStorageData() {
   const arrayData = JSON.parse(localStorage.getItem("watchlist"));
-  renderWatchlist(arrayData);
+  return arrayData;
 }
 
 function renderWatchlist(arrData) {
@@ -99,7 +110,7 @@ function renderWatchlist(arrData) {
                     <p>${movie.Runtime}</p>
                     <p>${movie.Genre}</p>
                     <div>
-                        <button class="add-watchlist" data-imdbserial=${movie.imdbID}>+</button>
+                        <button class="remove-watchlist" data-imdbserial=${movie.imdbID}>-</button>
                         <p>${movie.imdbID}</p>
                     </div>
                     <p>${movie.Plot}</p>
@@ -107,7 +118,13 @@ function renderWatchlist(arrData) {
             </div>
         </div>`;
   });
-  movieWatchlistEl.innerHTML = watchlistDom
+  movieWatchlistEl.innerHTML = watchlistDom;
+  document.querySelectorAll(".remove-watchlist").forEach((remove) => {
+    remove.addEventListener("click", (e) => {
+      let data = e.target.dataset.imdbserial;
+      removeWatchlist(data);
+    });
+  });
 }
 
 if (searchForm) {
@@ -126,6 +143,6 @@ if (searchForm) {
   });
 }
 
-if(movieWatchlistEl){
-  getLocalStorageData()
+if (movieWatchlistEl) {
+  renderWatchlist(getLocalStorageData());
 }
